@@ -8,7 +8,6 @@ SQUARE_TWO_COLOR = (200, 200, 200, 255)
 LEDGER_COLOR = (225, 225, 225, 255)
 WINDOW_WIDTH = 512
 WINDOW_HEIGHT = WINDOW_WIDTH
-
 current_piece: chess.Piece or None = None
 current_sprite: pyglet.sprite.Sprite or None = None
 pieces: List[chess.Piece] = list()
