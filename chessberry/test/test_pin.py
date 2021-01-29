@@ -13,7 +13,7 @@ class TestPin(unittest.TestCase):
         board.attach(Rook('e2', WHITE))
         board.attach(Rook('e7', BLACK))
         game = Game(board)
-        assert(not game['e2'].can_move_to_no_self_check_test('a2', game))
+        assert(not game['e2'].can_move_to('a2', game))
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ class TestEnpassant(unittest.TestCase):
         game.move('h7', 'h5')
         game.move('e4', 'e5')
         game.move('f7', 'f5')
-        assert(game['e5'].can_move_to_no_self_check_test('f6', game))
+        assert(game['e5'].can_move_to('f6', game))
 
     @staticmethod
     def test_no_enpassant_white_last_move_not_black_pawn():
@@ -21,7 +21,7 @@ class TestEnpassant(unittest.TestCase):
         game.move('f7', 'f5')
         game.move('e4', 'e5')
         game.move('h7', 'h6')
-        assert(not game['e5'].can_move_to_no_self_check_test('f6', game))
+        assert(not game['e5'].can_move_to('f6', game))
 
     @staticmethod
     def test_enpassant_black():
@@ -31,7 +31,7 @@ class TestEnpassant(unittest.TestCase):
         game.move('e4', 'e5')
         game.move('h5', 'h4')
         game.move('g2', 'g4')
-        assert(game['h4'].can_move_to_no_self_check_test('g3', game))
+        assert(game['h4'].can_move_to('g3', game))
 
     @staticmethod
     def test_no_enpassant_black_last_move_not_white_pawn():
@@ -41,7 +41,7 @@ class TestEnpassant(unittest.TestCase):
         game.move('g2', 'g4')
         game.move('h5', 'h4')
         game.move('a2', 'a3')
-        assert(not game['h4'].can_move_to_no_self_check_test('g3', game))
+        assert(not game['h4'].can_move_to('g3', game))
 
 
 if __name__ == '__main__':
