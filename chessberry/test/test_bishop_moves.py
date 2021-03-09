@@ -1,33 +1,25 @@
 import unittest
 
 from chessberry.chess import *
+from chessberry.test import tools
 
 
 class TestBishopCanMove(unittest.TestCase):
 
     @staticmethod
     def test_easy():
-        board = Board()
-        board.attach(Bishop('c1', WHITE))
-        board.attach(Pawn('d2', BLACK))
-        game = Game(board)
-        assert(game['c1'].can_move_to('d2', game))
+        board = Board(True)
+        board.attach('c1', WHITE_BISHOP)
+        board.attach('d2', BLACK_PAWN)
+        assert('d2' in tools.to_alg_set(move_set('c1', board)))
 
     @staticmethod
     def test_blocked():
-        board = Board()
-        board.attach(Bishop('a8', BLACK))
-        board.attach(Pawn('d5', BLACK))
-        board.attach(Queen('e4', WHITE))
-        game = Game(board)
-        assert(not game['a8'].can_move_to('e4', game))
-
-    @staticmethod
-    def test_other_way():
-        board = Board()
-        board.attach(Bishop('f1', WHITE))
-        game = Game(board)
-        assert(game['f1'].can_move_to('d3', game))
+        board = Board(True)
+        board.attach('a8', BLACK_BISHOP)
+        board.attach('d5', BLACK_PAWN)
+        board.attach('e4', WHITE_QUEEN)
+        assert('e4' not in tools.to_alg_set(move_set('a8', board)))
 
 
 if __name__ == '__main__':
