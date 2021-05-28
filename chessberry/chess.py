@@ -417,7 +417,7 @@ def _king_move_set(
                     or board[0][3] is not None
                 ):
                     return False
-                for sq in {(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)}:
+                for sq in {(0, 2), (0, 3), (0, 4)}:
                     if _is_attacking(sq, board, color.DARK):
                         return False
                 m.add((0, 2))
@@ -427,7 +427,7 @@ def _king_move_set(
                     return False
                 if board[0][5] is not None or board[0][6] is not None:
                     return False
-                for sq in {(0, 4), (0, 5), (0, 6), (0, 7)}:
+                for sq in {(0, 4), (0, 5), (0, 6)}:
                     if _is_attacking(sq, board, color.DARK):
                         return False
                 m.add((0, 6))
@@ -801,7 +801,12 @@ class Board:
             return False
 
         start, end = to_indices(start), to_indices(end)
+
+        if self.__board[start[0]][start[1]].color != self.turn:
+            return False
+
         piece = self.__board[start[0]][start[1]]
+        enpassant = _is_enpassant(start, end, self)
         self.__ledger.add_move(
             _Move(
                 piece=piece,
@@ -809,8 +814,12 @@ class Board:
                 end=end,
                 castle=_is_castle(start, end, self),
                 promotion=_is_promotion(start, end, self),
-                capture=True if self.__board[end[0]][end[1]] is not None else False,
-                enpassant=_is_enpassant(start, end, self),
+                capture=(
+                    True
+                    if self.__board[end[0]][end[1]] is not None or enpassant
+                    else False
+                ),
+                enpassant=enpassant,
             )
         )
         self.__board[start[0]][start[1]] = None
@@ -843,11 +852,6 @@ class Board:
         self.__turn = Color.LIGHT if self.__turn != Color.LIGHT else Color.DARK
         return True
 
-
-if __name__ == "__main__":
-    import cProfile
-
-    cProfile.run(
-        'read_pgn_to_board("test/games/ct-2863-2675-2020.4.7.pgn")', sort="time"
-    )
-    t = read_pgn_to_board("test/games/ct-2863-2675-2020.4.7.pgn")
+    def get_piece(self, square: str) -> Optional[Piece]:
+        file, rank = to_indices(square)
+        return self.__board[file][rank]
