@@ -58,7 +58,6 @@ class BoardWindow(pyglet.window.Window):
 
     def move(self, start: str, end: str) -> bool:
         if self.board.move(start, end):
-            self.board.ledger[len(self.board.ledger) - 1].capture
             start_rank, start_file = chess.to_indices(start)
             end_rank, end_file = chess.to_indices(end)
             for piece in self.pieces:
