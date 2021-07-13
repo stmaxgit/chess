@@ -20,9 +20,7 @@ def _nearest_to_n_divides_by_m(n: int, m: int):
     q = int(n / m)
     n1 = m * q
     n2 = m * (q + 1)
-    if abs(n - n1) < abs(n - n2):
-        return n1
-    return n2
+    return n1 if abs(n - n1) < abs(n - n2) else n2
 
 
 class _SpritePiece(pyglet.sprite.Sprite):
@@ -185,7 +183,6 @@ class BoardWindow(pyglet.window.Window):
         selected = floor(8 * (y - self.y_sep) / self.board_length), floor(
             (8 * (x - self.x_sep) / self.board_length)
         )
-        print(chess.move_set(chess.from_indices(selected), window.board))
         if selected in chess.INDICES and self.last_click in chess.INDICES:
             self.move(
                 chess.from_indices(window.last_click), chess.from_indices(selected)
