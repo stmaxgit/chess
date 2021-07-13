@@ -1,14 +1,26 @@
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 from math import floor
 from chessberry import chess
 
 import pyglet
 
-LIGHT_SQUARE_COLOR = (150, 125, 125, 255)
-DARK_SQUARE_COLOR = (200, 200, 200, 255)
-LEDGER_COLOR = (225, 225, 225, 255)
-WINDOW_WIDTH = 512
-WINDOW_HEIGHT = WINDOW_WIDTH
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+BOARD_LENGTH = 500
+LIGHT_SQUARE_COLOR = (200, 200, 200, 255)
+DARK_SQUARE_COLOR = (150, 125, 125, 255)
+LEDGER_WIDTH = 125
+LEDGER_COLOR = LIGHT_SQUARE_COLOR
+
+
+def _nearest_to_n_divides_by_m(n: int, m: int):
+    #  This assumes, n, m both positive
+    q = int(n / m)
+    n1 = m * q
+    n2 = m * (q + 1)
+    if abs(n - n1) < abs(n - n2):
+        return n1
+    return n2
 
 
 class _SpritePiece(pyglet.sprite.Sprite):
@@ -30,20 +42,41 @@ class BoardWindow(pyglet.window.Window):
         self,
         width: int,
         height: int,
-        board: chess.Board,
+        board_length: int,
         light_square_color: Tuple[int, int, int, int],
         dark_square_color: Tuple[int, int, int, int],
+        ledger_width: int,
+        ledger_color: Tuple[int, int, int, int],
+        board: chess.Board,
         last_click: Tuple[int, int] = None,
     ):
+        assert ledger_width < width, "Width of ledger must be less than total width."
         super().__init__(width, height)
-        self.board = board
-        self.light_square_color = light_square_color
-        self.dark_square_color = dark_square_color
-        self.last_click = last_click
+
+        self.board_length = _nearest_to_n_divides_by_m(board_length, 8)
         self.board_image = pyglet.image.CheckerImagePattern(
             light_square_color, dark_square_color
-        ).create_image(self.height // 4, self.height // 4)
+        ).create_image(self.board_length // 4, self.board_length // 4)
+        self.light_square_color = light_square_color
+        self.dark_square_color = dark_square_color
+
+        self.x_sep = (width - ledger_width - self.board_length) // 3
+        self.y_sep = (height - self.board_length) // 2
         self.batch = pyglet.graphics.Batch()
+
+        self.ledger_width = ledger_width
+        self.ledger_image = pyglet.shapes.Rectangle(
+            2 * self.x_sep + self.board_length,
+            self.y_sep,
+            self.ledger_width,
+            self.board_length,
+            ledger_color[0:3],
+            batch=self.batch,
+            )
+        self.ledger_color = ledger_color
+
+        self.board = board
+        self.last_click = last_click
 
         self.pieces: List[_SpritePiece] = []
         for i, row in enumerate(self.board):
@@ -51,7 +84,7 @@ class BoardWindow(pyglet.window.Window):
                 if p is not None:
                     self.pieces.append(_SpritePiece(p, j, i, self.batch))
 
-        sprite_size = self.board_image.height // 2
+        sprite_size = self.board_image.width // 2
         for p in self.pieces:
             p.scale = sprite_size / p.height
             self._update_position(p)
@@ -131,17 +164,22 @@ class BoardWindow(pyglet.window.Window):
 
     def _update_position(self, piece: _SpritePiece):
         """Update position instance variable for the passed piece."""
-        piece.position = (piece.file * self.width // 8, piece.rank * self.height // 8)
+        piece.position = (
+            self.x_sep + piece.file * self.board_length // 8,
+            self.y_sep + piece.rank * self.board_length // 8,
+        )
 
     def on_draw(self):
         window.clear()
         for x in range(4):
             for y in range(4):
-                self.board_image.blit(self.height // 4 * x, self.height // 4 * y)
+                self.board_image.blit(self.x_sep + self.board_length // 4 * x, self.y_sep + self.board_length // 4 * y)
         self.batch.draw()
 
     def on_mouse_press(self, x, y, dx, dy):
-        selected = floor(8 * y / window.height), floor(8 * x / window.width)
+        selected = floor(8 * (y - self.y_sep) / self.board_length), floor(
+            (8 * (x - self.x_sep) / self.board_length)
+        )
         if self.last_click is not None:
             self.move(
                 chess.from_indices(window.last_click), chess.from_indices(selected)
@@ -154,9 +192,12 @@ if __name__ == "__main__":
     window = BoardWindow(
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
-        chess.Board(),
+        BOARD_LENGTH,
         LIGHT_SQUARE_COLOR,
         DARK_SQUARE_COLOR,
+        LEDGER_WIDTH,
+        LEDGER_COLOR,
+        chess.Board(),
     )
 
 pyglet.app.run()
