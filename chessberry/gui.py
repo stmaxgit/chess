@@ -45,7 +45,7 @@ class BoardWindow(pyglet.window.Window):
         ).create_image(self.height // 4, self.height // 4)
         self.batch = pyglet.graphics.Batch()
 
-        self.pieces: List[Optional[chess.ChessPiece]] = []
+        self.pieces: List[_SpritePiece] = []
         for i, row in enumerate(self.board):
             for j, p in enumerate(row):
                 if p is not None:
