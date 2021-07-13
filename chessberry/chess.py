@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List, Set, Tuple, Optional
 
 import re
+import copy
 
 _RANKS: List[int] = [_ for _ in range(0, 8)]
 _FILES: List[int] = _RANKS
@@ -102,7 +103,7 @@ def move_set(square: str, board: "Board") -> Set[Tuple[int, int]]:
 def read_pgn_to_board(file_path: str) -> "Board":
     """Build a board from a game recorded in pgn format."""
     with open(file_path) as f:
-        while f.readline() is not "\n":
+        while f.readline() != "\n":
             pass
         moves = re.findall(r"([A-Za-z]\w+|O-O-O|O-O)", f.read())
 
@@ -710,6 +711,7 @@ class Board:
         self.__board: List[List[Optional[ChessPiece]]] = [
             [None] * 8 for _ in range(0, 8)
         ]
+        self.__history: List[List[List[Optional[ChessPiece]]]] = []
         self.__ledger: Ledger = Ledger()
         self.__white_king_square: Optional[Tuple[int, int]] = None
         self.__black_king_square: Optional[Tuple[int, int]] = None
@@ -807,6 +809,7 @@ class Board:
 
         piece = self.__board[start[0]][start[1]]
         enpassant = _is_enpassant(start, end, self)
+        self.__history.append(copy.deepcopy(self.__board))
         self.__ledger.add_move(
             _Move(
                 piece=piece,
