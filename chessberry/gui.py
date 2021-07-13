@@ -81,6 +81,13 @@ class BoardWindow(pyglet.window.Window):
         self.board = board
         self.last_click = last_click
 
+        self._refresh_pieces()
+
+    def move(self, start: str, end: str):
+        self.board.move(start, end)
+        self._refresh_pieces()
+
+    def _refresh_pieces(self):
         self.pieces: List[_SpritePiece] = []
         for i, row in enumerate(self.board):
             for j, p in enumerate(row):
@@ -90,93 +97,17 @@ class BoardWindow(pyglet.window.Window):
         sprite_size = self.board_image.width // 2
         for p in self.pieces:
             p.scale = sprite_size / p.height
-            self._update_position(p)
-
-    def move(self, start: str, end: str) -> bool:
-        if self.board.move(start, end):
-            start_rank, start_file = chess.to_indices(start)
-            end_rank, end_file = chess.to_indices(end)
-            for piece in self.pieces:
-                #  Piece on start file that has already satisfied move criteria
-                if piece.file == start_file and piece.rank == start_rank:
-                    #  If capturing something, need to remove captured piece from board
-                    if self.board.ledger[len(self.board.ledger) - 1].capture:
-                        self._handle_capture(end_rank, end_file)
-                    # If castling, need to update rook position as well
-                    if self.board.ledger[len(self.board.ledger) - 1].castle:
-                        self._handle_castle(end_rank)
-
-                    piece.rank, piece.file = end_rank, end_file
-                    self._update_position(piece)
-                    return True
-        return False
-
-    def _handle_capture(self, end_rank: int, end_file: int):
-        """If a piece is captured, the sprite needs to be made invisible and the piece
-        removed from the reference list.
-        """
-        for piece in self.pieces:
-            if piece.file == end_file and piece.rank == end_rank:
-                self.pieces.remove(piece)
-                piece.visible = False
-                return
-        #  Must be enpassant capture at this point.
-        if self.board.turn != chess.Color.LIGHT:
-            for piece in self.pieces:
-                if piece.file == end_file and piece.rank == end_rank - 1:
-                    self.pieces.remove(piece)
-                    piece.visible = False
-                    return
-        else:
-            for piece in self.pieces:
-                if piece.file == end_file and piece.rank == end_rank + 1:
-                    self.pieces.remove(piece)
-                    piece.visible = False
-                    return
-
-    def _handle_castle(self, end_file: int):
-        """If castling, the appropriate rook needs to be updated."""
-        #  This method will be called after the turn has already been updated,
-        #  so we check against the opposite color of what you would anticipate.
-        if self.board.turn != chess.Color.LIGHT:
-            if end_file == 2:
-                for piece in self.pieces:
-                    if piece.rank == 0 and piece.file == 0:
-                        piece.file = 3
-                        self._update_position(piece)
-                        return
-            else:
-                for piece in self.pieces:
-                    if piece.rank == 0 and piece.file == 7:
-                        piece.file = 5
-                        self._update_position(piece)
-                        return
-        else:
-            if end_file == 2:
-                for piece in self.pieces:
-                    if piece.rank == 7 and piece.file == 0:
-                        piece.file = 3
-                        self._update_position(piece)
-                        return
-            else:
-                for piece in self.pieces:
-                    if piece.rank == 7 and piece.file == 7:
-                        piece.file = 5
-                        self._update_position(piece)
-                        return
-
-    def _update_position(self, piece: _SpritePiece):
-        """Update position instance variable for the passed piece."""
-        piece.position = (
-            self.x_sep + piece.file * self.board_length // 8,
-            self.y_sep + piece.rank * self.board_length // 8,
-        )
+            p.position = (
+                self.x_sep + p.file * self.board_length // 8,
+                self.y_sep + p.rank * self.board_length // 8,
+            )
 
     def on_draw(self):
         window.clear()
         for x in range(4):
             for y in range(4):
-                self.board_image.blit(self.x_sep + self.board_length // 4 * x, self.y_sep + self.board_length // 4 * y)
+                self.board_image.blit(self.x_sep + self.board_length // 4 * x,
+                                      self.y_sep + self.board_length // 4 * y)
         self.batch.draw()
 
     def on_mouse_press(self, x, y, dx, dy):
