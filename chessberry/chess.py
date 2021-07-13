@@ -5,12 +5,12 @@ from typing import List, Set, Tuple, Optional
 import re
 import copy
 
-_RANKS: List[int] = [_ for _ in range(0, 8)]
-_FILES: List[int] = _RANKS
-_INDICES: Set[Tuple[int, int]] = set()
-for _ in _RANKS:
-    for __ in _FILES:
-        _INDICES.add((_, __))
+RANKS: List[int] = [_ for _ in range(0, 8)]
+FILES: List[int] = RANKS
+INDICES: Set[Tuple[int, int]] = set()
+for _ in RANKS:
+    for __ in FILES:
+        INDICES.add((_, __))
 
 
 class Piece(Enum):
@@ -187,18 +187,18 @@ def _pawn_move_set(
     square: Tuple[int, int], board: "Board", color: Color
 ) -> Set[Tuple[int, int]]:
     moves = set()
-    if color == Color.LIGHT and square[0] + 1 in _RANKS:
+    if color == Color.LIGHT and square[0] + 1 in RANKS:
         if board[square[0] + 1][square[1]] is None:
             #  White one push
             moves.add((square[0] + 1, square[1]))
             if (
-                square[0] + 2 in _RANKS
+                square[0] + 2 in RANKS
                 and square[0] == 1
                 and board[square[0] + 2][square[1]] is None
             ):
                 #  White two push
                 moves.add((square[0] + 2, square[1]))
-        if square[1] + 1 in _FILES:
+        if square[1] + 1 in FILES:
             other = board[square[0] + 1][square[1] + 1]
             if (
                 other is not None
@@ -207,7 +207,7 @@ def _pawn_move_set(
             ):
                 #  White capture forward right (standard or enpassant)
                 moves.add((square[0] + 1, square[1] + 1))
-        if square[1] - 1 in _FILES:
+        if square[1] - 1 in FILES:
             other = board[square[0] + 1][square[1] - 1]
             if (
                 other is not None
@@ -216,18 +216,18 @@ def _pawn_move_set(
             ):
                 #  White capture forward left (standard or enpassant)
                 moves.add((square[0] + 1, square[1] - 1))
-    elif color == Color.DARK and square[0] - 1 in _RANKS:
+    elif color == Color.DARK and square[0] - 1 in RANKS:
         if board[square[0] - 1][square[1]] is None:
             #  Black one push
             moves.add((square[0] - 1, square[1]))
             if (
-                square[0] - 2 in _RANKS
+                square[0] - 2 in RANKS
                 and square[0] == 6
                 and board[square[0] - 2][square[1]] is None
             ):
                 #  Black two push
                 moves.add((square[0] - 2, square[1]))
-        if square[1] + 1 in _FILES:
+        if square[1] + 1 in FILES:
             other = board[square[0] - 1][square[1] + 1]
             if (
                 other is not None
@@ -236,7 +236,7 @@ def _pawn_move_set(
             ):
                 #  Black capture backward right (standard or enpassant)
                 moves.add((square[0] - 1, square[1] + 1))
-        if square[1] - 1 in _FILES:
+        if square[1] - 1 in FILES:
             other = board[square[0] - 1][square[1] - 1]
             if (
                 other is not None
@@ -320,7 +320,7 @@ def _knight_move_set(
     moves.add((square[0] - 2, square[1] - 1))
     moves.add((square[0] - 1, square[1] + 2))
     moves.add((square[0] - 1, square[1] - 2))
-    moves = filter(lambda i: i in _INDICES, moves)
+    moves = filter(lambda i: i in INDICES, moves)
 
     return set(filter(lambda m: _is_not_occupied_by_same_color(m, board, color), moves))
 
@@ -471,7 +471,7 @@ def _king_move_set(
     moves.add((square[0] + 1, square[1] - 1))
     moves.add((square[0], square[1] - 1))
 
-    moves = set(filter(lambda i: i in _INDICES, moves))
+    moves = set(filter(lambda i: i in INDICES, moves))
 
     moves = set(
         filter(lambda m: _is_not_occupied_by_same_color(m, board, color), moves)
@@ -505,8 +505,8 @@ def _is_not_occupied_by_same_color(
 
 
 def _is_attacking(square: Optional[Tuple[int, int]], board: "Board", color: Color):
-    for rank in _RANKS:
-        for file in _FILES:
+    for rank in RANKS:
+        for file in FILES:
             piece = board[rank][file]
             if (
                 piece is not None
@@ -740,9 +740,9 @@ class Board:
 
     def __repr__(self):
         out = ""
-        for rank in _RANKS[::-1]:
+        for rank in RANKS[::-1]:
             out += str(rank + 1) + " | "
-            for file in _FILES:
+            for file in FILES:
                 out += (
                     " - "
                     if self.__board[rank][file] is None
@@ -752,7 +752,7 @@ class Board:
                 )
             out += "|\n"
         out += "   "
-        for rank in _RANKS:
+        for rank in RANKS:
             out += "  " + chr(ord("a") + rank)
 
         return out
@@ -827,6 +827,11 @@ class Board:
         )
         self.__board[start[0]][start[1]] = None
         self.__board[end[0]][end[1]] = piece
+        if enpassant:
+            if self.turn == Color.LIGHT:
+                self.__board[end[0] - 1][end[1]] = None
+            else:
+                self.__board[end[0] + 1][end[1]] = None
         last_move = self.__ledger[len(self.__ledger) - 1]
 
         if piece == WHITE_KING:
@@ -847,8 +852,6 @@ class Board:
                 else:
                     self.__board[7][7] = None
                     self.__board[7][5] = BLACK_ROOK
-        if last_move.enpassant:
-            self.__board[last_move.end[0]][last_move.end[1]] = None
         elif last_move.promotion:
             self.__hold_for_promotion = True
 

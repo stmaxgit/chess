@@ -6,11 +6,13 @@ import pyglet
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
-BOARD_LENGTH = 500
+BOARD_LENGTH = 600
 LIGHT_SQUARE_COLOR = (200, 200, 200, 255)
 DARK_SQUARE_COLOR = (150, 125, 125, 255)
-LEDGER_WIDTH = 125
-LEDGER_COLOR = LIGHT_SQUARE_COLOR
+LEDGER_WIDTH = 200
+LEDGER_BORDER_WIDTH = 10
+LEDGER_COLOR = LIGHT_SQUARE_COLOR[0:3]
+LEDGER_BORDER_COLOR = DARK_SQUARE_COLOR[0:3]
 
 
 def _nearest_to_n_divides_by_m(n: int, m: int):
@@ -46,7 +48,9 @@ class BoardWindow(pyglet.window.Window):
         light_square_color: Tuple[int, int, int, int],
         dark_square_color: Tuple[int, int, int, int],
         ledger_width: int,
-        ledger_color: Tuple[int, int, int, int],
+        ledger_border_width: int,
+        ledger_color: Tuple[int, int, int],
+        ledger_border_color: Tuple[int, int, int],
         board: chess.Board,
         last_click: Tuple[int, int] = None,
     ):
@@ -65,15 +69,16 @@ class BoardWindow(pyglet.window.Window):
         self.batch = pyglet.graphics.Batch()
 
         self.ledger_width = ledger_width
-        self.ledger_image = pyglet.shapes.Rectangle(
+        self.ledger_image = pyglet.shapes.BorderedRectangle(
             2 * self.x_sep + self.board_length,
             self.y_sep,
             self.ledger_width,
             self.board_length,
-            ledger_color[0:3],
+            border=ledger_border_width,
+            border_color=ledger_border_color,
+            color=ledger_color,
             batch=self.batch,
             )
-        self.ledger_color = ledger_color
 
         self.board = board
         self.last_click = last_click
@@ -180,7 +185,8 @@ class BoardWindow(pyglet.window.Window):
         selected = floor(8 * (y - self.y_sep) / self.board_length), floor(
             (8 * (x - self.x_sep) / self.board_length)
         )
-        if self.last_click is not None:
+        print(chess.move_set(chess.from_indices(selected), window.board))
+        if selected in chess.INDICES and self.last_click in chess.INDICES:
             self.move(
                 chess.from_indices(window.last_click), chess.from_indices(selected)
             )
@@ -196,7 +202,9 @@ if __name__ == "__main__":
         LIGHT_SQUARE_COLOR,
         DARK_SQUARE_COLOR,
         LEDGER_WIDTH,
-        LEDGER_COLOR,
+        LEDGER_BORDER_WIDTH,
+        LEDGER_COLOR[0:3],
+        LEDGER_BORDER_COLOR[0:3],
         chess.Board(),
     )
 
